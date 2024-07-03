@@ -33,10 +33,8 @@
 
 # https://github.com/CPJKU/partitura
 
-# import partitura as pt
-# import numpy as np
 
-# # my_xml_file = "example.mei" # pt.EXAMPLE_MUSICXML
+
 # my_xml_file = pt.EXAMPLE_MEI
 
 # score = pt.load_score(my_xml_file)
@@ -52,7 +50,8 @@
 # beat_map = part.beat_map
 
 # print(beat_map(pianoroll[:, 0]))
-
+import partitura as pt
+import numpy as np
 from pyverse import Pyverse
 import aima3.search
 import copy
@@ -103,14 +102,16 @@ class Syllables(aima3.search.Problem):
         # Define a value function for optimization problems
         return 0
 
-
-poem = "en un lugar de la mancha de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía"
+my_xml_file = pt.EXAMPLE_MEI
+score = pt.load_score(my_xml_file)
+part = score.parts[0]
+poem = "en un lugar de la mancha de cuyo nombre"
 syllables=Pyverse(poem).syllables.split('-')[1:]
 problem=Syllables(syllables)
-solution_node = aima3.search.breadth_first_search(problem)
-if solution_node:
-    print("Solution path:", solution_node.solution())
-    print("Poem:", solution_node.state.verses)
-    print("Path cost:", solution_node.path_cost)
-else:
-    print("No solution found")
+# solution_node = aima3.search.breadth_first_search(problem)
+# if solution_node:
+#     print("Solution path:", solution_node.solution())
+#     print("Poem:", solution_node.state.verses)
+#     print("Path cost:", solution_node.path_cost)
+# else:
+#     print("No solution found")
