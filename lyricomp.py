@@ -1,4 +1,4 @@
-# from pyverse import Pyverse
+
 
 # def extract_verse(syllables, poem):
 #     return poem[:syllables], poem[syllables:]
@@ -53,9 +53,9 @@
 
 # print(beat_map(pianoroll[:, 0]))
 
-
+from pyverse import Pyverse
 import aima3.search
-
+import copy
 # from aima3.search import backtracking_search, NQueensProblem
 
 # aima.csp.backtracking_search(syllables)
@@ -67,18 +67,26 @@ class State:
 
 class Syllables(aima3.search.Problem):
     def __init__(self, initial, goal=None):
-        super().__init__(State(list(reversed(initial))),goal)
+        super().__init__(State(initial),goal)
 
     def actions(self, state):
-        actions = [x for x in range(len(state.verses)) if len(state.verses[x]) <= 8]
-        return actions
+        # print("actions: ", [x for x in range(len(state.verses)) if len(state.verses[x]) <= 8] + [len(state.verses)])
+        return [x for x in range(len(state.verses)) if len(state.verses[x]) <= 8] + [len(state.verses)]
         
-
-    def result(self, state, action):
+    def result(self, old_state, action):
         # Return the new state after applying the action
-        syllable = state.original.pop()
-        if len(state.verses[action]) == 0:
-            state.verses[action] = [syllable]
+
+        state = copy.deepcopy(old_state)
+        syllable = state.original[0]
+
+        state.original = state.original[1:]
+        # print("-----")
+        # print(state.original)
+        # print(syllable)
+        # print(state.verses)
+        # print(action)
+        if action == len(state.verses):
+            state.verses.append([syllable])
         else:
             state.verses[action].append(syllable)
         return state
@@ -96,10 +104,13 @@ class Syllables(aima3.search.Problem):
         return 0
 
 
-problem=Syllables(['en', 'un', 'lu', 'gar'])
+poem = "en un lugar de la mancha de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía"
+syllables=Pyverse(poem).syllables.split('-')[1:]
+problem=Syllables(syllables)
 solution_node = aima3.search.breadth_first_search(problem)
 if solution_node:
     print("Solution path:", solution_node.solution())
+    print("Poem:", solution_node.state.verses)
     print("Path cost:", solution_node.path_cost)
 else:
     print("No solution found")
