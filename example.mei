@@ -235,15 +235,15 @@
               <staff n="1" xml:id="m259_s1">
                 <layer>
                   <beam>
-                    <note pname="b" oct="4" dur="8" xml:id="m259_s1_n1" artic="acc"/>
-                    <note pname="g" oct="4" dur="16" xml:id="m259_s1_n2"/>
-                    <note pname="d" oct="4" dur="16" xml:id="m259_s1_n3"/>
+                    <note pname="b" oct="4" dur="8" xml:id="m259_s1_n1" artic="acc" syl="chas"/>
+                    <note pname="g" oct="4" dur="16" xml:id="m259_s1_n2" syl="chis"/>
+                    <note pname="d" oct="4" dur="16" xml:id="m259_s1_n3" syl="chos"/>
                   </beam>
                   <beam>
-                    <note pname="b" oct="3" dur="16" xml:id="m259_s1_n4"/>
-                    <note pname="c" oct="4" dur="16" xml:id="m259_s1_n5"/>
-                    <note pname="d" oct="4" dur="16" xml:id="m259_s1_n6"/>
-                    <note pname="e" oct="4" dur="16" xml:id="m26_s1_n7"/>
+                    <note pname="b" oct="3" dur="16" xml:id="m259_s1_n4" syl="un"/>
+                    <note pname="c" oct="4" dur="16" xml:id="m259_s1_n5" syl="dos"/>
+                    <note pname="d" oct="4" dur="16" xml:id="m259_s1_n6" syl="tres"/>
+                    <note pname="e" oct="4" dur="16" xml:id="m26_s1_n7" syl="cuat"/>
                   </beam>
                   <beam>
                     <note pname="f" oct="4" dur="32" xml:id="m259_s1_n8"/>

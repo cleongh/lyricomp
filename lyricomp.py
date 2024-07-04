@@ -50,7 +50,8 @@
 # beat_map = part.beat_map
 
 # print(beat_map(pianoroll[:, 0]))
-import partitura as pt
+# import partitura as pt
+import xmltodict
 import numpy as np
 from pyverse import Pyverse
 import aima3.search
@@ -102,16 +103,52 @@ class Syllables(aima3.search.Problem):
         # Define a value function for optimization problems
         return 0
 
-my_xml_file = pt.EXAMPLE_MEI
-score = pt.load_score(my_xml_file)
-part = score.parts[0]
-poem = "en un lugar de la mancha de cuyo nombre"
-syllables=Pyverse(poem).syllables.split('-')[1:]
-problem=Syllables(syllables)
-# solution_node = aima3.search.breadth_first_search(problem)
-# if solution_node:
-#     print("Solution path:", solution_node.solution())
-#     print("Poem:", solution_node.state.verses)
-#     print("Path cost:", solution_node.path_cost)
-# else:
-#     print("No solution found")
+
+
+def get_lyrics_from_mei(input_file):
+    with open(input_file) as fd:
+        score = xmltodict.parse(fd.read())
+
+        measures=score['mei']['music']['body']['mdiv']['score']['section']['measure']
+
+        text = ''
+
+        for measure in measures:
+            for staff in measure['staff']:
+                try:
+                    text += staff['layer']['note']['verse']['syl']
+                except Exception:
+                    pass #print('something bad')
+        return text
+
+def syllables_right(poem):
+    syllables=Pyverse(poem).syllables.split('-')[1:]
+    problem=Syllables(syllables)
+    solution_node = aima3.search.breadth_first_search(problem)
+    if solution_node:
+        # print("Solution path:", solution_node.solution())
+        # print("Poem:", )
+        return solution_node.state.verses
+        # print("Path cost:", solution_node.path_cost)
+    else:
+        return None #print("No solution found")
+
+    
+
+if __name__ == '__main__':
+    poem=get_lyrics_from_mei("grace4.mei")
+    verses=syllables_right(poem)
+    if poem:
+        print("Poem:", poem)
+    else:
+        print("No solution found!")
+    # # poem="en un lugar de la mancha de cuyo nombre"
+    # syllables=Pyverse(poem).syllables.split('-')[1:]
+    # problem=Syllables(syllables)
+    # solution_node = aima3.search.breadth_first_search(problem)
+    # if solution_node:
+    #     print("Solution path:", solution_node.solution())
+    #     print("Poem:", solution_node.state.verses)
+    #     print("Path cost:", solution_node.path_cost)
+    # else:
+    #     print("No solution found")
