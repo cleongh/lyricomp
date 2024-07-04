@@ -1,1 +1,8 @@
 pyverse
+aima3
+xmltodict
+numpy
+
+
+
+
