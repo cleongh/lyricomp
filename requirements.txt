@@ -2,7 +2,9 @@ pyverse
 aima3
 xmltodict
 numpy
-
+music21
+pandas
+openpyxl
 
 
 
