@@ -7,17 +7,19 @@ import music21 as m21
 
 from baseline_algo import run_for_file
 
-METADATA_XLS = '/Users/hugo/invs/projetos/2023_EA_DIGIFOLK/Metadata template PTNERA.xlsx'
-COPLAS_XLS = '/Users/hugo/invs/projetos/2023_EA_DIGIFOLK/data_ptnera/DIGIFOLK Ejemplos de coplas.xlsx'
-DIR_XML_FILES = '/Users/hugo/invs/projetos/2023_EA_DIGIFOLK/xml_ptnera'
+from escribir_fichero import escribir_en_fichero, reset_fichero
+
+METADATA_XLS = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/Metadata template PTNERA.xlsx'
+COPLAS_XLS = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/DIGIFOLK Ejemplos de coplas.xlsx'
+DIR_XML_FILES = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera'
 
 COL_ID = 'Id'
 COL_OBRA = 'Obra'
 COL_NOMBRE = 'Nombre Obra'
 COL_VERSOS = 'Versos'
 
-RANGE_TEST = range(3, 16)
-DEBUG = False
+RANGE_TEST = range(4, 16)
+DEBUG = True
 
 
 def info_from_coplas_xls(coplas_xls, col_nombre, col_versos):
@@ -57,14 +59,35 @@ def get_title_from_xml(xml_file):
 
 
 def hit(segmented, gold):
+    if len(segmented) <= 0:
+        return False
     for i, ls in enumerate(segmented):
         if clean_text(ls) != clean_text(gold[i]):
             return False
     return True
 
+def hit_percentage(segmented, gold, percentage=1):
+
+    verses = 0
+    fails = 0
+
+    if len(segmented) <= 0:
+        return False
+    for i, ls in enumerate(segmented):
+        verses +=1
+        if (len(gold) > i):
+            if clean_text(ls) != clean_text(gold[i]):
+                fails += 1
+    
+    if DEBUG: escribir_en_fichero ("Percentage of fail: " + str((verses-fails)/verses) + ' ' + str(percentage) )
+    if (verses-fails)/verses >=percentage:
+        return True
+    else: 
+        return False
 
 def clean_text(text):
     return text.lower().replace('_', ' ').translate(str.maketrans('','',string.punctuation))
+
 
 
 def match_with_filename(metadata, dir_music_files, coplas_xls, col_nombre, col_versos):
@@ -122,8 +145,9 @@ def match_with_metadata(metadata, dir_music_files, coplas_xls, col_nombre, col_v
     return dict_title_all
 
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
+    reset_fichero()
     dict_title_all = match_with_filename(METADATA_XLS, DIR_XML_FILES, COPLAS_XLS, COL_NOMBRE, COL_VERSOS)
     #dict_title_all = match_with_metadata(METADATA_XLS, DIR_XML_FILES, COPLAS_XLS, COL_NOMBRE, COL_VERSOS)
 
@@ -131,15 +155,28 @@ if __name__ == "__main__":
     for k, v in dict_title_all.items():
         print('########## FILE', v[0])
         segmented = run_for_file(v[0], RANGE_TEST, result='list', debug=DEBUG)
+        #segmented = run_for_file_r(v[0], RANGE_TEST, result='list', debug=DEBUG)
         gold = v[1]
-        if hit(segmented, gold):
+        if hit_percentage(segmented, gold, percentage=0.75):
+            print('HIT')
             count_hits += 1
+
         elif DEBUG:
             print('!!! NO-HIT:', k, '!!!')
             print('SEGMENTED:')
             print(segmented)
             print('GOLD:')
             print(v[1])
+        #Write in file to check the errors
+            escribir_en_fichero('!!!No-HIT:'+ k + '!!!')
+            escribir_en_fichero( 'SEGMENTED:')
+            for i in segmented:
+                escribir_en_fichero( i)
+            escribir_en_fichero( 'GOLD:')
+
+            for i in v[1]:
+                escribir_en_fichero( i)
+
 
     print('##########')
     print('HITS:', count_hits, format(count_hits / len(dict_title_all), '.0%'))
