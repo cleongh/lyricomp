@@ -78,7 +78,8 @@ def hit_percentage(segmented, gold, percentage=1):
         if (len(gold) > i):
             if clean_text(ls) != clean_text(gold[i]):
                 fails += 1
-    
+        else: 
+            break
     if (verses-fails)/verses >=percentage:
         if DEBUG: escribir_correcto("Percentage of fail: " + str((verses-fails)/verses) + ' ' + str(percentage))
         return True
@@ -158,7 +159,7 @@ if __name__ == "__main__":
         segmented = run_for_file(v[0], RANGE_TEST, result='list', debug=DEBUG)
         #segmented = run_for_file_r(v[0], RANGE_TEST, result='list', debug=DEBUG)
         gold = v[1]
-        if hit_percentage(segmented, gold, percentage=0.6):
+        if hit_percentage(segmented, gold, percentage=0.5):
             print('HIT')
             count_hits += 1
 

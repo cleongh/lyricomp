@@ -230,7 +230,7 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
     for m in test:
         x = (m-1)
         ok = True
-        if debug: escribir_en_fichero('TEST =' + str(m))
+        #if debug: escribir_en_fichero('TEST =' + str(m))
         while x < len(syllables):
             first = syllables[x - m + 1]
             aguda = False
@@ -253,8 +253,8 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             #last = syllables[x]
 
 
-            if debug:
-                escribir_en_fichero('FIRST ' +  str(x - m + 1) + ' ' +  first[0] + '| LAST' + str(x) + ' '+ last[0])
+            #if debug:
+            #    escribir_en_fichero('FIRST ' +  str(x - m + 1) + ' ' +  first[0] + '| LAST' + str(x) + ' '+ last[0])
 
             if  first[1] == 'extend':
                 break
@@ -262,18 +262,18 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             # must start with: begin or single
             if first[1] != 'begin' and first[1] != 'single':
                 ok = False
-                if debug: escribir_en_fichero('--IMPOSSIBLE START!')
+                #if debug: escribir_en_fichero('--IMPOSSIBLE START!')
                 break
 
             if last[1] == 'middle' or last[1] == 'begin':
                 ok = False
-                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                #if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
 
             # words that should not end lines
             if (last[1] == 'single' and last[0] in SINGLE_CANNOT_END) or ('\xa0' in last[0] and last[0].replace('\xa0', '') in SINGLE_CANNOT_END):
                 ok = False
-                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                #if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
             
             if (aguda):
@@ -281,7 +281,7 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             else:
                 x += m
         if ok:
-            if debug: escribir_en_fichero('OK' + str(m))
+            #if debug: escribir_en_fichero('OK' + str(m))
             #print(len(syllables) % m)
             possible.append(m)
 
@@ -311,8 +311,11 @@ def run_for_file(file, range, result='list', debug=False):
         syllables = xml_to_lyrics(xml_data, ties='all')
         possible = test_meters(syllables, range, discard_non_divisble=True, debug=debug)
 
-    for i in possible:
-        escribir_en_fichero('POSSIBLE '+ str(i) )
+    if debug:
+        possible_txt = ''
+        for i in possible:
+            possible_txt += str(i) + ','
+        escribir_en_fichero('POSSIBLE '+ possible_txt)
 
     #for p in possible:
     #    print('POSSIBLE', p)
@@ -323,7 +326,7 @@ def run_for_file(file, range, result='list', debug=False):
     pos_max_rima = 0
     for a in possible:
         num_a_rima = detectar_cualquier_rima(assemble_lyrics(syllables, breaks=a, result=result))
-        escribir_en_fichero(str(a) + ' ' + str(num_a_rima))
+        if debug :escribir_en_fichero(str(a) + ' ' + str(num_a_rima))
         if num_a_rima >= max_rima:
             max_rima = num_a_rima
             pos_max_rima = a
@@ -334,8 +337,8 @@ def run_for_file(file, range, result='list', debug=False):
     
     if debug: escribir_en_fichero('POSSIBLE filtered '+ possiblefiltered + ']')
 
-    if debug: escribir_en_fichero('Selected possible '+ str(pos_max_rima) + ']')
-    
+    if debug: escribir_en_fichero('Selected possible '+ str(pos_max_rima))
+
     return assemble_lyrics(syllables, breaks=pos_max_rima, result=result) if len(possible) > 0 else []
         
 import re
@@ -376,9 +379,9 @@ def tipo_rima(verso1, verso2):
     vocales1 = quitar_acentos(vocales1)
     vocales2 = quitar_acentos(vocales2)
     
-    if DEBUG:
-        escribir_en_fichero(verso1 + '-----' + verso2)
-        escribir_en_fichero ("Rima asonante: "+ vocales1[-1] + ' - ' + vocales2[-1])
+    #if DEBUG:
+    #    escribir_en_fichero(verso1 + '-----' + verso2)
+    #    escribir_en_fichero ("Rima asonante: "+ vocales1[-1] + ' - ' + vocales2[-1])
 
     if vocales1[-1] == vocales2[-1]:
         print ("Rima ")
