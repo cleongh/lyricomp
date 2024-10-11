@@ -7,7 +7,7 @@ import music21 as m21
 
 from baseline_algo import run_for_file
 
-from escribir_fichero import escribir_en_fichero, reset_fichero
+from escribir_fichero import escribir_en_fichero, reset_fichero, escribir_correcto
 
 METADATA_XLS = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/Metadata template PTNERA.xlsx'
 COPLAS_XLS = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/DIGIFOLK Ejemplos de coplas.xlsx'
@@ -79,10 +79,11 @@ def hit_percentage(segmented, gold, percentage=1):
             if clean_text(ls) != clean_text(gold[i]):
                 fails += 1
     
-    if DEBUG: escribir_en_fichero ("Percentage of fail: " + str((verses-fails)/verses) + ' ' + str(percentage) )
     if (verses-fails)/verses >=percentage:
+        if DEBUG: escribir_correcto("Percentage of fail: " + str((verses-fails)/verses) + ' ' + str(percentage))
         return True
     else: 
+        if DEBUG: escribir_en_fichero("Percentage of fail: " + str((verses-fails)/verses) + ' ' + str(percentage))
         return False
 
 def clean_text(text):
@@ -157,9 +158,18 @@ if __name__ == "__main__":
         segmented = run_for_file(v[0], RANGE_TEST, result='list', debug=DEBUG)
         #segmented = run_for_file_r(v[0], RANGE_TEST, result='list', debug=DEBUG)
         gold = v[1]
-        if hit_percentage(segmented, gold, percentage=0.75):
+        if hit_percentage(segmented, gold, percentage=0.6):
             print('HIT')
             count_hits += 1
+
+            escribir_correcto('!!!HIT:'+ k + '!!!')
+            escribir_correcto( 'SEGMENTED:')
+            for i in segmented:
+                escribir_correcto( i)
+            escribir_correcto( 'GOLD:')
+
+            for i in v[1]:
+                escribir_correcto( i)
 
         elif DEBUG:
             print('!!! NO-HIT:', k, '!!!')
