@@ -4,6 +4,7 @@ import string
 
 import pandas as pd
 import music21 as m21
+import unicodedata
 
 from baseline_algo import run_for_file
 
@@ -18,7 +19,7 @@ COL_OBRA = 'Obra'
 COL_NOMBRE = 'Nombre Obra'
 COL_VERSOS = 'Versos'
 
-RANGE_TEST = range(4, 16)
+RANGE_TEST = range(5, 16)
 DEBUG = True
 
 
@@ -76,6 +77,9 @@ def hit_percentage(segmented, gold, percentage=1):
     for i, ls in enumerate(segmented):
         verses +=1
         if (len(gold) > i):
+            if DEBUG: 
+                escribir_en_fichero (clean_text(ls))
+                escribir_en_fichero(clean_text(gold[i]))
             if clean_text(ls) != clean_text(gold[i]):
                 fails += 1
         else: 
@@ -88,9 +92,11 @@ def hit_percentage(segmented, gold, percentage=1):
         return False
 
 def clean_text(text):
-    return text.lower().replace('_', ' ').translate(str.maketrans('','',string.punctuation))
+    return quitar_acentos(text.lower().replace('_', ' ').replace('¡', ' ').replace('!', ' ').translate(str.maketrans('','',string.punctuation)).strip())
 
 
+def quitar_acentos(palabra):
+    return ''.join((c for c in unicodedata.normalize('NFD', palabra) if unicodedata.category(c) != 'Mn'))
 
 def match_with_filename(metadata, dir_music_files, coplas_xls, col_nombre, col_versos):
     dict_title_lyrics = info_from_coplas_xls(coplas_xls, col_nombre, col_versos)
@@ -155,10 +161,14 @@ if __name__ == "__main__":
 
     count_hits = 0
     for k, v in dict_title_all.items():
+
+        escribir_en_fichero('NEW LYRIC-------------------------------' + '########## FILE' + v[0])
         print('########## FILE', v[0])
         segmented = run_for_file(v[0], RANGE_TEST, result='list', debug=DEBUG)
         #segmented = run_for_file_r(v[0], RANGE_TEST, result='list', debug=DEBUG)
         gold = v[1]
+        
+
         if hit_percentage(segmented, gold, percentage=0.5):
             print('HIT')
             count_hits += 1

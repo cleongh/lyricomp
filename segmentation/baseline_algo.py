@@ -2,7 +2,7 @@ import music21 as m21
 import os
 import unicodedata
 
-from escribir_fichero import escribir_en_fichero
+from escribir_fichero import escribir_en_fichero, escribir_correcto
 
 DIR = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera'
 #FILE = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera/MX-1951-00-VM-00001.musicxml.xml'
@@ -15,7 +15,7 @@ FILE = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera/MX-
 #FILE = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera/MX-1951-00-VM-00072.musicxml.xml'
 
 # Note: in Spanish, all single-syllable words are stressed, but in some lyrics they may not count as such...
-DEBUG = True
+DEBUG = False
 
 SINGLE_CANNOT_END = [
     'a',
@@ -117,6 +117,10 @@ def quitar_acentos(palabra):
 
 # Función para determinar si una palabra es aguda
 def es_aguda(palabra):
+
+    if (contar_silabas(palabra) == 1):
+        return True
+
     # Normalizamos la palabra y quitamos acentos para analizar la última letra
     palabra_sin_acentos = quitar_acentos(palabra)
     
@@ -136,6 +140,19 @@ def tiene_tilde(palabra):
         if letra in "áéíóúÁÉÍÓÚ":
             return True
     return False
+
+
+def contar_silabas(palabra):
+    """
+    Cuenta el número de sílabas en una palabra basada en las secuencias de vocales.
+    """
+    palabra = palabra.lower()
+    vocales = 'aeiouáéíóúü'
+    
+    # Encuentra todas las secuencias de vocales
+    silabas = re.findall(r'[{}]+'.format(vocales), palabra)
+    
+    return len(silabas)
 
 def recuperar_palabra_de_silaba (syllables, posSylaba):
     word = ''
@@ -196,11 +213,11 @@ def assemble_lyrics(syllables, breaks=None, result='str'):
                 count_sylables+=1
             if syl[1] == 'single' or syl[1] == 'end':
                 line += ' '
-            #escribir_en_fichero("Es Aguda Assemble: " + recuperar_palabra_de_silaba(syllables,i) + ' - '+ str(es_aguda(recuperar_palabra_de_silaba(syllables,i))) + ' - ' + str(i))
+            if DEBUG: escribir_en_fichero("Es Aguda Assemble: " + recuperar_palabra_de_silaba(syllables,i) + ' - '+ str(es_aguda(recuperar_palabra_de_silaba(syllables,i))) + ' - ' + str(i))
             if breaks and (syl[1] == 'end' or syl[1] == 'single') and es_aguda(recuperar_palabra_de_silaba(syllables,i)) and (count_sylables) % (breaks-1) == 0:
                 lyrics.append(line.strip())
-                #escribir_en_fichero(line)
-                #escribir_en_fichero("BREAK por aguda")
+                if DEBUG: escribir_en_fichero(line)
+                if DEBUG: escribir_en_fichero("BREAK por aguda")
                 line = ''
                 count_sylables=0
             elif breaks and (count_sylables) % breaks == 0 and (syl[1] == 'end' or syl[1] == 'single'):
@@ -230,7 +247,7 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
     for m in test:
         x = (m-1)
         ok = True
-        #if debug: escribir_en_fichero('TEST =' + str(m))
+        if debug: escribir_en_fichero('TEST =' + str(m))
         while x < len(syllables):
             first = syllables[x - m + 1]
             aguda = False
@@ -253,8 +270,8 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             #last = syllables[x]
 
 
-            #if debug:
-            #    escribir_en_fichero('FIRST ' +  str(x - m + 1) + ' ' +  first[0] + '| LAST' + str(x) + ' '+ last[0])
+            if debug:
+                escribir_en_fichero('FIRST ' +  str(x - m + 1) + ' ' +  first[0] + '| LAST' + str(x) + ' '+ last[0])
 
             if  first[1] == 'extend':
                 break
@@ -262,18 +279,18 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             # must start with: begin or single
             if first[1] != 'begin' and first[1] != 'single':
                 ok = False
-                #if debug: escribir_en_fichero('--IMPOSSIBLE START!')
+                if debug: escribir_en_fichero('--IMPOSSIBLE START!')
                 break
 
             if last[1] == 'middle' or last[1] == 'begin':
                 ok = False
-                #if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
 
             # words that should not end lines
             if (last[1] == 'single' and last[0] in SINGLE_CANNOT_END) or ('\xa0' in last[0] and last[0].replace('\xa0', '') in SINGLE_CANNOT_END):
                 ok = False
-                #if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
             
             if (aguda):
@@ -281,7 +298,7 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             else:
                 x += m
         if ok:
-            #if debug: escribir_en_fichero('OK' + str(m))
+            if debug: escribir_en_fichero('OK' + str(m))
             #print(len(syllables) % m)
             possible.append(m)
 
@@ -299,8 +316,16 @@ def run_for_file(file, range, result='list', debug=False):
 
     #escribir_en_fichero("Sylables: " + str(len(syllables)))
 
-    #for i in syllables:
-    #    escribir_en_fichero(i[0] + ' - ' + i[1])
+    if debug:
+        
+        syllables_To_debug = ''
+        for i in syllables:
+            syllables_To_debug += "[" + i[0] +"] "
+        escribir_en_fichero(syllables_To_debug)
+        syllables_To_debug = ''
+        for i in syllables:
+            syllables_To_debug += "[" + i[0] + ',' + i[1] + "] "
+        escribir_en_fichero(syllables_To_debug)
 
     if len(syllables) == 0:
         print('-- No syllables')
@@ -327,18 +352,18 @@ def run_for_file(file, range, result='list', debug=False):
     for a in possible:
         num_a_rima = detectar_cualquier_rima(assemble_lyrics(syllables, breaks=a, result=result))
         if debug :escribir_en_fichero(str(a) + ' ' + str(num_a_rima))
-        if num_a_rima >= max_rima:
+        if num_a_rima > max_rima:
             max_rima = num_a_rima
             pos_max_rima = a
           
     possiblefiltered= '['
     for i in possible:
-       possiblefiltered+= str(i) + ' ' + str(pos_max_rima) + ','
+       possiblefiltered+= str(i) + ','
     
     if debug: escribir_en_fichero('POSSIBLE filtered '+ possiblefiltered + ']')
 
     if debug: escribir_en_fichero('Selected possible '+ str(pos_max_rima))
-
+    escribir_correcto('Selected possible '+ str(pos_max_rima))
     return assemble_lyrics(syllables, breaks=pos_max_rima, result=result) if len(possible) > 0 else []
         
 import re
@@ -394,11 +419,15 @@ def detectar_cualquier_rima(versos):
     Detecta si al menos dos versos de una lista tienen algún tipo de rima (asonante o consonante).
     Devuelve True si existe al menos una rima y False en caso contrario.
     """
+
+
     numero_rimas = 0
     for i in range(len(versos)):
         for j in range(i + 1, len(versos)):
             if tipo_rima(versos[i], versos[j]) != "Sin rima":
                 numero_rimas+=1
+
+    
     return numero_rimas
 
 
