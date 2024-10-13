@@ -1,6 +1,7 @@
 import music21 as m21
 import os
 import unicodedata
+import string
 
 from escribir_fichero import escribir_en_fichero, escribir_correcto
 
@@ -15,7 +16,7 @@ FILE = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera/MX-
 #FILE = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera/MX-1951-00-VM-00072.musicxml.xml'
 
 # Note: in Spanish, all single-syllable words are stressed, but in some lyrics they may not count as such...
-DEBUG = False
+DEBUG = True
 
 SINGLE_CANNOT_END = [
     'a',
@@ -115,18 +116,35 @@ def xml_to_lyrics(xml, ties='start'):
 def quitar_acentos(palabra):
     return ''.join((c for c in unicodedata.normalize('NFD', palabra) if unicodedata.category(c) != 'Mn'))
 
+def clean_text(text):
+    return text.lower().replace('_', ' ').replace('¡', ' ').replace('!', ' ').translate(str.maketrans('','',string.punctuation)).strip()
+
+
 # Función para determinar si una palabra es aguda
 def es_aguda(palabra):
 
+    palabra = clean_text(palabra)
+
+    if len(palabra) == 0:
+        return False
+    
     if (contar_silabas(palabra) == 1):
         return True
-
+    
     # Normalizamos la palabra y quitamos acentos para analizar la última letra
     palabra_sin_acentos = quitar_acentos(palabra)
     
     # Revisamos si tiene tilde en la última sílaba
-    if palabra[-1] in "áéíóúÁÉÍÓÚ":
-        return True
+
+    vocales = 'aeiouáéíóúü'
+    
+    # Busca todas las vocales en la palabra
+    match = re.findall(r'[{}]'.format(vocales), palabra)
+
+    if len(match) > 0:
+        if match[-1] in "áéíóúÁÉÍÓÚ":
+            return True
+    
     
     # Si no tiene tilde, pero termina en vocal, 'n' o 's', no es aguda
     if palabra_sin_acentos[-1] in "aeiouAEIOU" or palabra_sin_acentos[-1] in "nNsS":
@@ -213,11 +231,11 @@ def assemble_lyrics(syllables, breaks=None, result='str'):
                 count_sylables+=1
             if syl[1] == 'single' or syl[1] == 'end':
                 line += ' '
-            if DEBUG: escribir_en_fichero("Es Aguda Assemble: " + recuperar_palabra_de_silaba(syllables,i) + ' - '+ str(es_aguda(recuperar_palabra_de_silaba(syllables,i))) + ' - ' + str(i))
+            #if DEBUG: escribir_en_fichero("Es Aguda Assemble: " + recuperar_palabra_de_silaba(syllables,i) + ' - '+ str(es_aguda(recuperar_palabra_de_silaba(syllables,i))) + ' - ' + str(i))
             if breaks and (syl[1] == 'end' or syl[1] == 'single') and es_aguda(recuperar_palabra_de_silaba(syllables,i)) and (count_sylables) % (breaks-1) == 0:
                 lyrics.append(line.strip())
-                if DEBUG: escribir_en_fichero(line)
-                if DEBUG: escribir_en_fichero("BREAK por aguda")
+                #if DEBUG: escribir_en_fichero(line)
+                #if DEBUG: escribir_en_fichero("BREAK por aguda")
                 line = ''
                 count_sylables=0
             elif breaks and (count_sylables) % breaks == 0 and (syl[1] == 'end' or syl[1] == 'single'):
@@ -252,22 +270,31 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             first = syllables[x - m + 1]
             aguda = False
             
+            add = 0
+            for i in range(x - m + 1, x):
+                if len(syllables) > i:
+                    if (syllables[i][1] == 'extend'):
+                        add+=1
+            
+            print (add)
+            x+=add
+            if (x>=len(syllables)):
+                x=len(syllables)-1
             if (syllables[x-1][1] == 'single' ):
                 aguda = True
-                last = syllables[x-1]
+                x=x-1
             elif (tiene_tilde(syllables[x-1]) and syllables[x-1][1] == 'end' ):
                 aguda = True
-                last = syllables[x-1]
+                x=x-1
             elif (syllables[x-1][1] == 'end' and es_aguda(recuperar_palabra_de_silaba(syllables,x-1))):
                 #escribir_en_fichero("Sylaba " + syllables[x-1][0])
                 #escribir_en_fichero ("Palabra " + recuperar_palabra_de_silaba(syllables,x-1))
                 #escribir_en_fichero ("Es aguda: " + str( es_aguda(recuperar_palabra_de_silaba(syllables,x-1))))
                 aguda = True
-                last = syllables[x-1]
-            else:
-                last = syllables[x]
+                x=x-1
 
-            #last = syllables[x]
+
+            last = syllables[x]
 
 
             if debug:
@@ -286,6 +313,11 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
                 ok = False
                 if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
+            
+            #if last[1] == 'end'  and  es_aguda(recuperar_palabra_de_silaba(syllables,x)):
+            #    ok = False
+            #    if debug: escribir_en_fichero('--IMPOSSIBLE END! ' + recuperar_palabra_de_silaba(syllables,x) + ' ' + str(es_aguda(recuperar_palabra_de_silaba(syllables,x))) )
+            #    break
 
             # words that should not end lines
             if (last[1] == 'single' and last[0] in SINGLE_CANNOT_END) or ('\xa0' in last[0] and last[0].replace('\xa0', '') in SINGLE_CANNOT_END):
@@ -293,10 +325,14 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
                 if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
             
-            if (aguda):
-                x += m -1
-            else:
-                x += m
+            if (not aguda) and es_aguda(recuperar_palabra_de_silaba(syllables,x)):
+                ok = False
+                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                break
+            #if (aguda):
+            #    x += m -1
+            #else:
+            x += m
         if ok:
             if debug: escribir_en_fichero('OK' + str(m))
             #print(len(syllables) % m)
@@ -423,10 +459,13 @@ def detectar_cualquier_rima(versos):
 
     numero_rimas = 0
     for i in range(len(versos)):
-        for j in range(i + 1, len(versos)):
-            if tipo_rima(versos[i], versos[j]) != "Sin rima":
-                numero_rimas+=1
-
+        numero_rimas_loc = 0
+        for j in range(len(versos)):
+            if i!=j:
+                if tipo_rima(versos[i], versos[j]) != "Sin rima":
+                    numero_rimas_loc+=1
+        if numero_rimas_loc != 0:
+            numero_rimas+=1
     
     return numero_rimas
 
