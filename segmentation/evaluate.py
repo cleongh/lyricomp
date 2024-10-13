@@ -80,7 +80,12 @@ def hit_percentage(segmented, gold, percentage=1):
             if DEBUG: 
                 escribir_en_fichero (clean_text(ls))
                 escribir_en_fichero(clean_text(gold[i]))
-            if clean_text(ls) != clean_text(gold[i]):
+
+            matched = False
+            for ver in gold:
+                if clean_text(ls) == clean_text(ver):
+                    matched = True
+            if not matched:
                 fails += 1
         else: 
             break

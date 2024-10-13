@@ -280,6 +280,7 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             x+=add
             if (x>=len(syllables)):
                 x=len(syllables)-1
+                
             if (syllables[x-1][1] == 'single' ):
                 aguda = True
                 x=x-1
@@ -383,7 +384,7 @@ def run_for_file(file, range, result='list', debug=False):
     #    print(lyrics_to_str(syllables, p))
 
     ##Filtro por numero de rimas para intentar seleccionar la mejor opción dentro de las posibles. 
-    max_rima = 0
+    max_rima = -1
     pos_max_rima = 0
     for a in possible:
         num_a_rima = detectar_cualquier_rima(assemble_lyrics(syllables, breaks=a, result=result))
