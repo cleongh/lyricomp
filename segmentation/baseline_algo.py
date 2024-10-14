@@ -121,14 +121,15 @@ def clean_text(text):
 
 
 # Función para determinar si una palabra es aguda
-def es_aguda(palabra):
+def es_aguda(palabra, pos):
 
     palabra = clean_text(palabra)
 
     if len(palabra) == 0:
         return False
     
-    if (contar_silabas(palabra) == 1):
+    if (pos == "single"):
+        #escribir_en_fichero("Numero silabas " + palabra + ": " + str(contar_silabas(palabra)) )
         return True
     
     # Normalizamos la palabra y quitamos acentos para analizar la última letra
@@ -169,7 +170,8 @@ def contar_silabas(palabra):
     
     # Encuentra todas las secuencias de vocales
     silabas = re.findall(r'[{}]+'.format(vocales), palabra)
-    
+    #if DEBUG:
+    #    escribir_en_fichero(palabra + ": " + str(len(silabas)))
     return len(silabas)
 
 def recuperar_palabra_de_silaba (syllables, posSylaba):
@@ -232,7 +234,7 @@ def assemble_lyrics(syllables, breaks=None, result='str'):
             if syl[1] == 'single' or syl[1] == 'end':
                 line += ' '
             #if DEBUG: escribir_en_fichero("Es Aguda Assemble: " + recuperar_palabra_de_silaba(syllables,i) + ' - '+ str(es_aguda(recuperar_palabra_de_silaba(syllables,i))) + ' - ' + str(i))
-            if breaks and (syl[1] == 'end' or syl[1] == 'single') and es_aguda(recuperar_palabra_de_silaba(syllables,i)) and (count_sylables) % (breaks-1) == 0:
+            if breaks and (syl[1] == 'end' or syl[1] == 'single') and es_aguda(recuperar_palabra_de_silaba(syllables,i), syl[1]) and (count_sylables) % (breaks-1) == 0:
                 lyrics.append(line.strip())
                 #if DEBUG: escribir_en_fichero(line)
                 #if DEBUG: escribir_en_fichero("BREAK por aguda")
@@ -281,16 +283,7 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
             if (x>=len(syllables)):
                 x=len(syllables)-1
                 
-            if (syllables[x-1][1] == 'single' ):
-                aguda = True
-                x=x-1
-            elif (tiene_tilde(syllables[x-1]) and syllables[x-1][1] == 'end' ):
-                aguda = True
-                x=x-1
-            elif (syllables[x-1][1] == 'end' and es_aguda(recuperar_palabra_de_silaba(syllables,x-1))):
-                #escribir_en_fichero("Sylaba " + syllables[x-1][0])
-                #escribir_en_fichero ("Palabra " + recuperar_palabra_de_silaba(syllables,x-1))
-                #escribir_en_fichero ("Es aguda: " + str( es_aguda(recuperar_palabra_de_silaba(syllables,x-1))))
+            if ((syllables[x-1][1] == 'end' or syllables[x-1][1] == 'single') and es_aguda(recuperar_palabra_de_silaba(syllables,x-1), syllables[x-1][1])):
                 aguda = True
                 x=x-1
 
@@ -326,9 +319,12 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
                 if debug: escribir_en_fichero('--IMPOSSIBLE END!')
                 break
             
-            if (not aguda) and es_aguda(recuperar_palabra_de_silaba(syllables,x)):
+            if (not aguda) and es_aguda(recuperar_palabra_de_silaba(syllables,x), syllables[x][1]):
                 ok = False
-                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                if debug: 
+                    escribir_en_fichero('--IMPOSSIBLE END BECAUSE AGUDA!')
+                    escribir_en_fichero(recuperar_palabra_de_silaba(syllables,x))
+                    escribir_en_fichero("Es aguda: " + str(es_aguda(recuperar_palabra_de_silaba(syllables,x), syllables[x][1])))
                 break
             #if (aguda):
             #    x += m -1
@@ -358,11 +354,11 @@ def run_for_file(file, range, result='list', debug=False):
         syllables_To_debug = ''
         for i in syllables:
             syllables_To_debug += "[" + i[0] +"] "
-        escribir_en_fichero(syllables_To_debug)
+        #escribir_en_fichero(syllables_To_debug)
         syllables_To_debug = ''
         for i in syllables:
             syllables_To_debug += "[" + i[0] + ',' + i[1] + "] "
-        escribir_en_fichero(syllables_To_debug)
+        #escribir_en_fichero(syllables_To_debug)
 
     if len(syllables) == 0:
         print('-- No syllables')
