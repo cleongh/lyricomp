@@ -10,9 +10,9 @@ from baseline_algo import run_for_file
 
 from escribir_fichero import escribir_en_fichero, reset_fichero, escribir_correcto
 
-METADATA_XLS = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/Metadata template PTNERA.xlsx'
-COPLAS_XLS = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/DIGIFOLK Ejemplos de coplas.xlsx'
-DIR_XML_FILES = '/Users/alerom02/Documents/Proyectos/Mexico/lyricomp/Datos/xml_ptnera'
+METADATA_XLS = '../Datos/Metadata template PTNERA.xlsx'
+COPLAS_XLS = '../Datos/DIGIFOLK Ejemplos de coplas.xlsx'
+DIR_XML_FILES = '../Datos/xml_ptnera'
 
 COL_ID = 'Id'
 COL_OBRA = 'Obra'
