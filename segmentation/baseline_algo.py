@@ -219,11 +219,26 @@ def recuperar_palabra_de_silaba (syllables, posSylaba):
 
     return word
 
-def assemble_lyrics(syllables, breaks=None, result='str'):
+def assemble_lyrics(syllables, breaks=None, options_asy =None, result='str'):
     lyrics = []
     line = ''
     count_sylables = 0
+    asymetric = False
+    options = ""
+    print("breaks: " + str(breaks))
+    if "A" in str(breaks):
+        option_asy = int(breaks.split("-")[1])
+        asymetric = True
+        print (options_asy)
+        options = options_asy[option_asy] 
+
+    verse = 0
+    
     for i, syl in enumerate(syllables):
+        if asymetric:
+            breaks = options[verse]
+            print("breaks in " + str(breaks))
+            print(options)
         if syl[0]:
             if syl[1] != 'extend':
                 line += syl[0]
@@ -235,10 +250,12 @@ def assemble_lyrics(syllables, breaks=None, result='str'):
                 lyrics.append(line.strip())
                 line = ''
                 count_sylables=0
+                verse += 1
             elif breaks and (count_sylables) % breaks == 0 and (syl[1] == 'end' or syl[1] == 'single'):
                 lyrics.append(line.strip())
                 line = ''
                 count_sylables=0
+                verse += 1
 
     if line:
         lyrics.append(line.strip())
@@ -324,13 +341,107 @@ def test_meters(syllables, test, discard_non_divisble=False, debug=False):
     #sorted_by_syllables_left = sorted(possible, key=lambda x: len(syllables))
     return sorted_by_syllables_left
 
+def test_asymetric_meters(syllables, test, discard_non_divisble=False, debug=False):
+    possible = []
+
+    #return possible
+    if discard_non_divisble:
+        test = [t for t in test if len(syllables) % t == 0] # >1?
+
+    verse=0
+    option = 0
+    for y in test:
+        ok = False
+        if (len(y)>verse):
+            m = y[verse]
+        else: 
+            y[len(y)-1]
+        #for m in y:
+
+        x = (m-1)
+        ok = True
+        if debug: 
+            escribir_en_fichero('TEST ASY=' + "A-" + str(option) + ": " + str(y))
+        while x < len(syllables):
+
+            first = syllables[x - m + 1]
+            aguda = False
+            if debug: 
+                escribir_en_fichero('M: ' + str(m))
+            add = 0
+            for i in range(x - m + 1, x):
+                if len(syllables) > i:
+                    if (syllables[i][1] == 'extend'):
+                        add+=1
+            
+            print (add)
+            x+=add
+            if (x>=len(syllables)):
+                x=len(syllables)-1
+                
+            if ((syllables[x-1][1] == 'end' or syllables[x-1][1] == 'single') and es_aguda(recuperar_palabra_de_silaba(syllables,x-1), syllables[x-1][1])):
+                aguda = True
+                x=x-1
 
 
-def run_for_file(file, range, result='list', debug=False):
+            last = syllables[x]
+
+
+            if debug:
+                escribir_en_fichero('FIRST ' +  str(x - m + 1) + ' ' +  first[0] + '| LAST' + str(x) + ' '+ last[0])
+
+            if  first[1] == 'extend':
+                break
+
+            # must start with: begin or single
+            if first[1] != 'begin' and first[1] != 'single':
+                ok = False
+                if debug: escribir_en_fichero('--IMPOSSIBLE START!')
+                break
+
+            if last[1] == 'middle' or last[1] == 'begin':
+                ok = False
+                if debug: escribir_en_fichero('--IMPOSSIBLE END! MoB')
+                break
+            # words that should not end lines
+            if (last[1] == 'single' and last[0] in SINGLE_CANNOT_END) or ('\xa0' in last[0] and last[0].replace('\xa0', '') in SINGLE_CANNOT_END):
+                ok = False
+                if debug: escribir_en_fichero('--IMPOSSIBLE END!')
+                break
+            
+            if (not aguda) and es_aguda(recuperar_palabra_de_silaba(syllables,x), syllables[x][1]):
+                ok = False
+                if debug: 
+                    escribir_en_fichero('--IMPOSSIBLE END BECAUSE AGUDA!')
+                    escribir_en_fichero(recuperar_palabra_de_silaba(syllables,x))
+                    escribir_en_fichero("Es aguda: " + str(es_aguda(recuperar_palabra_de_silaba(syllables,x), syllables[x][1])))
+                break
+            #if (aguda):
+            #    x += m -1
+            #else:
+            verse+=1
+            if (len(y)>verse):
+                m = y[verse]
+            else: 
+                y[len(y)-1]
+            x += m
+
+
+        if ok:
+            if debug: escribir_en_fichero('OK' + str(option))
+            #print(len(syllables) % m)
+            possible.append("A-" + str(option))
+
+        option +=1
+    sorted_by_syllables_left = sorted(possible, key=lambda x: len(syllables))
+    #sorted_by_syllables_left = sorted(possible, key=lambda x: len(syllables))
+    return sorted_by_syllables_left
+
+def run_for_file(file, range, options_asy, result='list', debug=False):
     xml_data = m21.converter.parse(file)
     syllables = xml_to_lyrics(xml_data)
     print(len(syllables), syllables)
-    print(assemble_lyrics(syllables))
+    print(assemble_lyrics(syllables, len(syllables), options_asy))
 
     #escribir_en_fichero("Sylables: " + str(len(syllables)))
 
@@ -350,6 +461,13 @@ def run_for_file(file, range, result='list', debug=False):
         return
 
     possible = test_meters(syllables, range, discard_non_divisble=False, debug=debug)
+    possible_asy = test_asymetric_meters(syllables, options_asy, discard_non_divisble=False, debug=debug)
+   
+    if len(possible_asy) > 0:
+        escribir_correcto('Selected possible  asy: ' )
+        for a in possible_asy:
+            escribir_correcto(a)
+
     if len(possible) == 0:
         syllables = xml_to_lyrics(xml_data, ties='all')
         possible = test_meters(syllables, range, discard_non_divisble=True, debug=debug)
@@ -358,28 +476,37 @@ def run_for_file(file, range, result='list', debug=False):
         possible_txt = ''
         for i in possible:
             possible_txt += str(i) + ','
-        escribir_en_fichero('POSSIBLE '+ possible_txt)
+        for i in possible_asy:
+            possible_txt += str(i) + ','
+        escribir_en_fichero('POSSIBLE ASY'+ possible_txt)
 
-    pos_max_rima = rymeFilter(syllables, possible, result, debug)
+    pos_max_rima = rymeFilter(syllables, possible, possible_asy, options_asy, result, debug)
 
     
     escribir_correcto('Selected possible '+ str(pos_max_rima))
-    return assemble_lyrics(syllables, breaks=pos_max_rima, result=result) if len(possible) > 0 else []
+    return assemble_lyrics(syllables, breaks=pos_max_rima,options_asy = options_asy, result=result) if len(possible) > 0 else []
         
 import re
 
 
-def rymeFilter (syllables, possible, result, debug=False):
+def rymeFilter (syllables, possible, possible_asy, options_asy, result, debug=False):
     ##Filtro por numero de rimas para intentar seleccionar la mejor opción dentro de las posibles. 
     max_rima = -1
     pos_max_rima = 0
     for a in possible:
-        num_a_rima = detectar_cualquier_rima(assemble_lyrics(syllables, breaks=a, result=result))
+        num_a_rima = detectar_cualquier_rima(assemble_lyrics(syllables, breaks=a,options_asy= options_asy, result=result))
         if debug :escribir_en_fichero(str(a) + ' ' + str(num_a_rima))
         if num_a_rima > max_rima:
             max_rima = num_a_rima
             pos_max_rima = a
-          
+    
+    for a in possible_asy:
+        num_a_rima = detectar_cualquier_rima(assemble_lyrics(syllables, breaks=a,options_asy = options_asy, result=result))
+        if debug :escribir_en_fichero(str(a) + ' ' + str(num_a_rima))
+        if num_a_rima > max_rima:
+            max_rima = num_a_rima
+            pos_max_rima = a
+
     possiblefiltered= '['
     for i in possible:
        possiblefiltered+= str(i) + ','

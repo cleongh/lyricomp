@@ -20,6 +20,7 @@ COL_NOMBRE = 'Nombre Obra'
 COL_VERSOS = 'Versos'
 
 RANGE_TEST = range(5, 16)
+OPTIONS_ASYM = [[7,7,7,7,9,12]]
 DEBUG = True
 
 
@@ -169,7 +170,7 @@ if __name__ == "__main__":
 
         escribir_en_fichero('NEW LYRIC-------------------------------' + '########## FILE' + v[0])
         print('########## FILE', v[0])
-        segmented = run_for_file(v[0], RANGE_TEST, result='list', debug=DEBUG)
+        segmented = run_for_file(v[0], RANGE_TEST,OPTIONS_ASYM, result='list', debug=DEBUG)
         #segmented = run_for_file_r(v[0], RANGE_TEST, result='list', debug=DEBUG)
         gold = v[1]
         
